@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 //middleware
@@ -29,14 +29,64 @@ async function run() {
     client.connect();
 
     const carServiceCollection = client.db('carDoctor').collection('services');
+    const bookingsCollection = client.db('carDoctor').collection('bookings');
 
     //get-service
     app.get('/services', async(req, res)=>{
       const result = await carServiceCollection.find().toArray();
       res.send(result);
     })
+    //get-service-byId
+    app.get('/services/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const result = await carServiceCollection.findOne(filter);
+      res.send(result);
+    })
 
+    //get-bookings
+    app.get('/bookings', async(req, res)=>{
+      const result = await bookingsCollection.find().toArray();
+      res.send(result);
+    })
 
+    //bookings-findOne
+    app.get('/bookings/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const result = await bookingsCollection.findOne(filter);
+      res.send(result); 
+    })
+
+    //post-bookings
+    app.post('/bookings', async(req, res)=>{
+      const body = req.body;
+      const result = await bookingsCollection.insertOne(body);
+      res.send(result);
+    })
+
+    //bookings-editOne
+    app.put('/bookings/:id', async(req, res)=>{
+      const id = req.params.id;
+      const data = req.body;
+      const filter = {_id: new ObjectId(id)};
+      const options = {upsert: true};
+      const updateDoc = {
+        $set:{
+          ...data
+        }
+      }
+      const result = await bookingsCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    })
+
+    //bookings-delete-one
+    app.delete('/bookings/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const result = await bookingsCollection.deleteOne(filter);
+      res.send(result);
+    })
 
 
     // Send a ping to confirm a successful connection
